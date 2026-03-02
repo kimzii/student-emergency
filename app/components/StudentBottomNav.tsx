@@ -14,7 +14,7 @@ export default function StudentBottomNav() {
       <Button
         variant="ghost"
         className={
-          isActive("/student/dashboard") ? "text-blue-600" : "text-gray-500"
+          isActive("/student/dashboard") ? "text-destructive" : "text-gray-500"
         }
         onClick={() => router.push("/student/dashboard")}
       >
@@ -24,7 +24,7 @@ export default function StudentBottomNav() {
       <Button
         variant="ghost"
         className={
-          isActive("/student/history") ? "text-blue-600" : "text-gray-500"
+          isActive("/student/history") ? "text-destructive" : "text-gray-500"
         }
         onClick={() => router.push("/student/history")}
       >
@@ -34,7 +34,7 @@ export default function StudentBottomNav() {
       <Button
         variant="ghost"
         className={
-          isActive("/student/profile") ? "text-blue-600" : "text-gray-500"
+          isActive("/student/profile") ? "text-destructive" : "text-gray-500"
         }
         onClick={() => router.push("/student/profile")}
       >
@@ -45,7 +45,7 @@ export default function StudentBottomNav() {
         variant="ghost"
         className={
           isActive("/student/linked-parents")
-            ? "text-blue-600"
+            ? "text-destructive"
             : "text-gray-500"
         }
         onClick={() => router.push("/student/linked-parents")}

@@ -14,7 +14,7 @@ export default function ParentBottomNav() {
       <Button
         variant="ghost"
         className={
-          isActive("/parent/dashboard") ? "text-blue-600" : "text-gray-500"
+          isActive("/parent/dashboard") ? "text-destructive" : "text-gray-500"
         }
         onClick={() => router.push("/parent/dashboard")}
       >
@@ -24,7 +24,7 @@ export default function ParentBottomNav() {
       <Button
         variant="ghost"
         className={
-          isActive("/parent/profile") ? "text-blue-600" : "text-gray-500"
+          isActive("/parent/profile") ? "text-destructive" : "text-gray-500"
         }
         onClick={() => router.push("/parent/profile")}
       >
@@ -35,7 +35,7 @@ export default function ParentBottomNav() {
         variant="ghost"
         className={
           isActive("/parent/linked-students")
-            ? "text-blue-600"
+            ? "text-destructive"
             : "text-gray-500"
         }
         onClick={() => router.push("/parent/linked-students")}
