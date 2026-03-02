@@ -37,7 +37,6 @@ export default function ProfilePage() {
 
   return (
     <main className="flex flex-1 flex-col items-center justify-center py-8 px-4">
-      <Card className="w-full max-w-md p-8 flex flex-col items-center">
         <Avatar
           className="mb-4"
           fallback={<UserRound className="w-10 h-10 text-gray-400" />}
@@ -69,7 +68,6 @@ export default function ProfilePage() {
           <LogOut className="w-5 h-5 mr-2" />
           Logout
         </Button>
-      </Card>
     </main>
   );
 }

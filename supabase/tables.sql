@@ -19,6 +19,7 @@ create table if not exists emergency_events (
   student_id uuid references profiles(id) on delete cascade,
   lat double precision not null,
   lng double precision not null,
+  location_name text,
   status text check (status in ('active', 'resolved')) not null default 'active',
   created_at timestamptz not null default now()
 );
