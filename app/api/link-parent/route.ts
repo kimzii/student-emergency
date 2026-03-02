@@ -4,6 +4,55 @@ import { NextRequest, NextResponse } from "next/server";
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
+// GET endpoint to fetch student info by ID
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const studentId = searchParams.get("studentId");
+
+  if (!studentId) {
+    return NextResponse.json(
+      { error: "Student ID is required." },
+      { status: 400 },
+    );
+  }
+
+  const supabase = createClient(supabaseUrl, supabaseKey);
+
+  // Fetch student profile from profiles table
+  const { data: studentProfile, error } = await supabase
+    .from("profiles")
+    .select("id, full_name, role")
+    .eq("id", studentId)
+    .single();
+
+  if (error || !studentProfile) {
+    return NextResponse.json({ error: "Student not found." }, { status: 404 });
+  }
+
+  if (studentProfile.role !== "student") {
+    return NextResponse.json(
+      { error: "This is not a student account." },
+      { status: 400 },
+    );
+  }
+
+  // Get email from auth.users using service role key if available, 
+  // otherwise return profile data without email
+  let email = "";
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (serviceRoleKey) {
+    const adminSupabase = createClient(supabaseUrl, serviceRoleKey);
+    const { data: authUser } = await adminSupabase.auth.admin.getUserById(studentId);
+    email = authUser?.user?.email || "";
+  }
+
+  return NextResponse.json({
+    id: studentProfile.id,
+    full_name: studentProfile.full_name,
+    email: email,
+  });
+}
+
 export async function POST(req: NextRequest) {
   // Get the access token from the Authorization header
   const authHeader = req.headers.get("authorization");

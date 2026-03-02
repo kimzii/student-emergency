@@ -6,6 +6,7 @@ import { Input } from "../components/ui/input";
 import { Button } from "../components/ui/button";
 import { Alert } from "../components/ui/alert";
 import { User, Users, Eye, EyeOff } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function SignupForm() {
   const [email, setEmail] = useState("");
@@ -17,6 +18,7 @@ export default function SignupForm() {
   const [loading, setLoading] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const router = useRouter();
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,8 +37,7 @@ export default function SignupForm() {
     if (!res.ok || result.error) {
       setError(result.error || "Signup failed");
     } else {
-      setMessage(result.message || "Check your email for a confirmation link.");
-      if (result.user?.id) setUserId(result.user.id);
+      router.replace("/login");
     }
     setLoading(false);
   };

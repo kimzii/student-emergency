@@ -9,6 +9,12 @@ type LinkedStudent = {
     id: string;
   };
 };
+// Type for scanned student info
+type ScannedStudent = {
+  id: string;
+  full_name: string;
+  email: string;
+};
 import { useRouter } from "next/navigation";
 import { supabase } from "../../../lib/supabaseClient";
 import { Card } from "../../../components/ui/card";
@@ -22,6 +28,10 @@ export default function ParentDashboard() {
   const [scanning, setScanning] = useState(false);
   const [linkStatus, setLinkStatus] = useState<string | null>(null);
   const [linkedStudents, setLinkedStudents] = useState<LinkedStudent[]>([]);
+  const [scannedStudent, setScannedStudent] = useState<ScannedStudent | null>(
+    null,
+  );
+  const [isLinking, setIsLinking] = useState(false);
   const router = useRouter();
 
   // Move fetchLinkedStudents above useEffect
@@ -69,36 +79,72 @@ export default function ParentDashboard() {
     fetchUser();
   }, [router]);
 
-  // Use the type from @yudiel/react-qr-scanner if available, otherwise use unknown and narrow
+  // Fetch student info after scanning
   async function handleScan(result: unknown) {
     // The scanner returns an array of objects with rawValue
     if (!Array.isArray(result) || !result[0]?.rawValue) return;
     const studentId = result[0].rawValue as string;
     setScanning(false);
+    setLinkStatus("Fetching student info...");
+
+    try {
+      const res = await fetch(
+        `/api/link-parent?studentId=${encodeURIComponent(studentId)}`,
+      );
+      const data = await res.json();
+
+      if (res.ok) {
+        setScannedStudent(data);
+        setLinkStatus(null);
+      } else {
+        setLinkStatus(data.error || "Failed to fetch student info.");
+      }
+    } catch {
+      setLinkStatus("Error fetching student info.");
+    }
+  }
+
+  // Link the scanned student to the parent
+  async function handleLinkStudent() {
+    if (!scannedStudent) return;
+    setIsLinking(true);
     setLinkStatus("Linking...");
 
     const { data: sessionData } = await supabase.auth.getSession();
     const accessToken = sessionData?.session?.access_token;
     if (!accessToken) {
       setLinkStatus("You must be logged in.");
+      setIsLinking(false);
       return;
     }
 
-    const res = await fetch("/api/link-parent", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${accessToken}`,
-      },
-      body: JSON.stringify({ studentId }),
-    });
-    const data = await res.json();
-    if (res.ok && data.success) {
-      setLinkStatus("Successfully linked to student!");
-      if (user) await fetchLinkedStudents(user.id);
-    } else {
-      setLinkStatus(data.error || "Failed to link.");
+    try {
+      const res = await fetch("/api/link-parent", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ studentId: scannedStudent.id }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setLinkStatus("Successfully linked to student!");
+        setScannedStudent(null);
+        if (user) await fetchLinkedStudents(user.id);
+      } else {
+        setLinkStatus(data.error || "Failed to link.");
+      }
+    } catch {
+      setLinkStatus("Error linking student.");
     }
+    setIsLinking(false);
+  }
+
+  // Cancel linking
+  function handleCancelLink() {
+    setScannedStudent(null);
+    setLinkStatus(null);
   }
 
   if (loading) {
@@ -134,6 +180,39 @@ export default function ParentDashboard() {
               >
                 Cancel
               </Button>
+            </div>
+          )}
+          {scannedStudent && (
+            <div className="w-full mb-4 p-4 border rounded-lg bg-gray-50">
+              <h3 className="text-lg font-semibold mb-2">Confirm Link</h3>
+              <p className="text-gray-700">
+                <span className="font-medium">Name:</span>{" "}
+                {scannedStudent.full_name || "Unknown"}
+              </p>
+              {scannedStudent.email && (
+                <p className="text-gray-700 mb-4">
+                  <span className="font-medium">Email:</span>{" "}
+                  {scannedStudent.email}
+                </p>
+              )}
+              {!scannedStudent.email && <div className="mb-4" />}
+              <div className="flex gap-2">
+                <Button
+                  className="flex-1"
+                  onClick={handleLinkStudent}
+                  disabled={isLinking}
+                >
+                  {isLinking ? "Linking..." : "Link"}
+                </Button>
+                <Button
+                  className="flex-1"
+                  variant="outline"
+                  onClick={handleCancelLink}
+                  disabled={isLinking}
+                >
+                  Cancel
+                </Button>
+              </div>
             </div>
           )}
           {linkStatus && (
