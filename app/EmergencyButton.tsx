@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { supabase } from "../lib/supabaseClient";
+import { toast } from "sonner";
 
 export default function EmergencyButton() {
   const [loading, setLoading] = useState(false);
@@ -14,6 +15,7 @@ export default function EmergencyButton() {
     setSuccess(false);
     if (!navigator.geolocation) {
       setError("Geolocation is not supported by your browser.");
+      toast.error("Geolocation is not supported by your browser.");
       setLoading(false);
       return;
     }
@@ -23,6 +25,7 @@ export default function EmergencyButton() {
     const accessToken = sessionData?.session?.access_token;
     if (!accessToken) {
       setError("You must be logged in to send an emergency alert.");
+      toast.error("You must be logged in to send an emergency alert.");
       setLoading(false);
       return;
     }
@@ -48,13 +51,19 @@ export default function EmergencyButton() {
             (result.error || "Failed to send emergency") +
               " (Check if you are logged in and have a student profile)",
           );
+          toast.error(
+            (result.error || "Failed to send emergency") +
+              " (Check if you are logged in and have a student profile)",
+          );
         } else {
           setSuccess(true);
+          toast.success("SOS sent!");
         }
         setLoading(false);
       },
       (err) => {
         setError("Failed to get location: " + err.message);
+        toast.error("Failed to get location: " + err.message);
         setLoading(false);
       },
     );
@@ -78,12 +87,6 @@ export default function EmergencyButton() {
         >
           {loading ? "..." : "SOS"}
         </button>
-      </div>
-      <div className="flex flex-col items-center mt-4">
-        {error && <div className="text-red-500 text-sm mt-2">{error}</div>}
-        {success && (
-          <div className="text-green-600 text-sm mt-2">SOS sent!</div>
-        )}
       </div>
     </div>
   );

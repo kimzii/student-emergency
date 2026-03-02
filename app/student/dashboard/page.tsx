@@ -52,15 +52,15 @@ export default function StudentDashboard() {
             : "Welcome!"}
         </h2>
       </div>
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-center px-10 mx-auto">
-        <h1 className="text-3xl text-gray-900 font-semibold mb-6">
+      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-center px-10 mx-auto gap-8">
+        <EmergencyButton />
+        <h1 className="text-xl text-gray-900 font-semibold">
           Are you in Emergency?
         </h1>
-        <p className="text-gray-700 mb-8 text-center">
+        <p className=" text-sm text-gray-500 text-center">
           Press the button below to send an emergency alert with your current
           location to your linked parents.
         </p>
-        <EmergencyButton />
       </main>
     </>
   );
