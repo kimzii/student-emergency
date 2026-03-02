@@ -98,6 +98,15 @@ export default function DebugPage() {
 
       const data = await res.json();
       data.logs.forEach((log: string) => addLog(`[Server] ${log}`));
+      
+      if (data.success) {
+        addLog("✅ Push sent successfully from server");
+        addLog("⏳ Waiting for notification to appear...");
+        addLog("If you don't see a notification:");
+        addLog("  1. Check chrome://inspect/#service-workers");
+        addLog("  2. Look for push event logs in service worker console");
+        addLog("  3. Make sure Chrome notifications are enabled in Android settings");
+      }
     } catch (err) {
       addLog(`Error: ${err instanceof Error ? err.message : String(err)}`);
     }
@@ -194,6 +203,38 @@ export default function DebugPage() {
     setLoading(false);
   };
 
+  const forceUpdateServiceWorker = async () => {
+    setLoading(true);
+    addLog("Forcing service worker update...");
+
+    try {
+      const reg = await navigator.serviceWorker.getRegistration();
+      if (reg) {
+        await reg.update();
+        addLog("Service worker update triggered");
+        addLog("Close and reopen the app to use the new version");
+        
+        // Wait a bit for update to complete
+        setTimeout(async () => {
+          const updatedReg = await navigator.serviceWorker.getRegistration();
+          if (updatedReg?.waiting) {
+            addLog("New service worker is waiting - close all app tabs/windows and reopen");
+          } else if (updatedReg?.installing) {
+            addLog("New service worker is installing...");
+          } else {
+            addLog("Service worker is up to date");
+          }
+        }, 2000);
+      } else {
+        addLog("No service worker registered");
+      }
+    } catch (err) {
+      addLog(`Error: ${err instanceof Error ? err.message : String(err)}`);
+    }
+
+    setLoading(false);
+  };
+
   function urlBase64ToUint8Array(base64String: string) {
     const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
     const base64 = (base64String + padding)
@@ -221,6 +262,13 @@ export default function DebugPage() {
           <div className="flex flex-wrap gap-2">
             <Button onClick={checkStatus} disabled={loading}>
               Check Status
+            </Button>
+            <Button
+              onClick={forceUpdateServiceWorker}
+              disabled={loading}
+              variant="outline"
+            >
+              Update Service Worker
             </Button>
             <Button
               onClick={showLocalNotification}

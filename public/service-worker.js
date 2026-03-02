@@ -1,4 +1,4 @@
-const CACHE_VERSION = "emergency-app-v3";
+const CACHE_VERSION = "emergency-app-v4";
 
 self.addEventListener("install", () => {
   console.log("[Service Worker] Installing new version...");
@@ -55,25 +55,30 @@ self.addEventListener("fetch", (event) => {
 
 // Handle push notifications
 self.addEventListener("push", (event) => {
-  console.log("[Service Worker] Push event received:", event);
+  console.log("[Service Worker] Push event received!");
+  console.log("[Service Worker] Event data:", event.data);
 
   let data = {};
+  let title = "Emergency Alert!";
+  let body = "Your child has triggered an emergency alert!";
+
   try {
-    data = event.data ? event.data.json() : {};
-    console.log("[Service Worker] Push data:", data);
+    if (event.data) {
+      data = event.data.json();
+      console.log("[Service Worker] Parsed push data:", JSON.stringify(data));
+      title = data.title || title;
+      body = data.body || body;
+    }
   } catch (err) {
     console.error("[Service Worker] Error parsing push data:", err);
   }
 
-  const title = data.title || "Emergency Alert!";
   const options = {
-    body: data.body || "Your child has triggered an emergency alert!",
+    body: body,
     icon: "/icons/icon-192x192.png",
     badge: "/icons/icon-192x192.png",
-    vibrate: [200, 100, 200, 100, 200],
     tag: "emergency-alert",
     requireInteraction: true,
-    silent: false,
     data: {
       url: data.url || "/parent/dashboard",
       lat: data.lat,
@@ -81,22 +86,24 @@ self.addEventListener("push", (event) => {
     },
   };
 
-  console.log("[Service Worker] Showing notification:", title, options);
+  console.log("[Service Worker] About to show notification:", title);
 
-  event.waitUntil(
-    self.registration
-      .showNotification(title, options)
-      .then(() => {
-        console.log("[Service Worker] Notification displayed successfully");
-      })
-      .catch((err) => {
-        console.error("[Service Worker] Error showing notification:", err);
-        // Try showing a basic notification as fallback
-        return self.registration.showNotification("Emergency Alert!", {
-          body: "Tap to view details",
-        });
-      }),
-  );
+  // Always show a notification - this is required for push events
+  const notificationPromise = self.registration
+    .showNotification(title, options)
+    .then(() => {
+      console.log("[Service Worker] ✅ Notification shown successfully!");
+      return true;
+    })
+    .catch((err) => {
+      console.error("[Service Worker] ❌ Error showing notification:", err);
+      // Fallback to simple notification
+      return self.registration.showNotification("Alert!", {
+        body: "You have a new notification",
+      });
+    });
+
+  event.waitUntil(notificationPromise);
 });
 
 // Handle notification click
