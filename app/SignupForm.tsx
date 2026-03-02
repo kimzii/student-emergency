@@ -5,6 +5,7 @@ import { Card, CardHeader, CardTitle } from "../components/ui/card";
 import { Input } from "../components/ui/input";
 import { Button } from "../components/ui/button";
 import { Alert } from "../components/ui/alert";
+import { User, Users, Eye, EyeOff } from "lucide-react";
 
 export default function SignupForm() {
   const [email, setEmail] = useState("");
@@ -15,6 +16,7 @@ export default function SignupForm() {
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,7 +43,7 @@ export default function SignupForm() {
 
   return (
     <>
-      <Card className="w-full max-w-md mx-auto p-0 border bg-white">
+      <Card className="w-full max-w-md mx-auto border bg-white">
         <CardHeader>
           <CardTitle className="text-xl font-semibold text-center w-full">
             Sign Up
@@ -50,41 +52,76 @@ export default function SignupForm() {
         <form onSubmit={handleSignup} className="flex flex-col gap-6 px-6 pb-6">
           <div className="flex flex-col gap-4">
             <label className="text-sm font-medium">Role</label>
-            <select
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
-              required
-              className="px-4 py-3 border border-gray-200 rounded-lg bg-white text-gray-900 focus:outline-none focus:border-gray-400 transition"
-            >
-              <option value="" disabled>
-                Select role
-              </option>
-              <option value="student">Student</option>
-              <option value="parent">Parent</option>
-            </select>
+            <div className="flex gap-4 justify-center">
+              <button
+                type="button"
+                className={`flex flex-col items-center px-4 py-2 rounded-lg border transition focus:outline-none focus:ring-2 focus:ring-red-500 ${
+                  role === "student"
+                    ? "bg-red-100 border-red-500 text-red-700"
+                    : "bg-white border-gray-200 text-gray-700 hover:border-gray-400"
+                }`}
+                onClick={() => setRole("student")}
+              >
+                <User className="w-6 h-6 mb-1" />
+                <span className="text-sm font-medium">Student</span>
+              </button>
+              <button
+                type="button"
+                className={`flex flex-col items-center px-4 py-2 rounded-lg border transition focus:outline-none focus:ring-2 focus:ring-red-500 ${
+                  role === "parent"
+                    ? "bg-red-100 border-red-500 text-red-700"
+                    : "bg-white border-gray-200 text-gray-700 hover:border-gray-400"
+                }`}
+                onClick={() => setRole("parent")}
+              >
+                <Users className="w-6 h-6 mb-1" />
+                <span className="text-sm font-medium">Parent</span>
+              </button>
+            </div>
+            {/* Hidden input for form validation */}
+            <input type="hidden" name="role" value={role} required />
+            <label className="text-sm font-medium">Full Name</label>
             <Input
               type="text"
-              placeholder="Full Name"
+              placeholder="Enter Full Name"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               required
             />
+            <label className="text-sm font-medium">Email</label>
             <Input
               type="email"
-              placeholder="Email"
+              placeholder="Enter Email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
               autoComplete="email"
             />
-            <Input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              autoComplete="new-password"
-            />
+            <label className="text-sm font-medium">Password</label>
+            <div className="relative">
+              <Input
+                type={showPassword ? "text" : "password"}
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                autoComplete="new-password"
+                className="pr-12"
+              />
+              <button
+                type="button"
+                tabIndex={-1}
+                onClick={() => setShowPassword((v) => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 focus:outline-none"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? (
+                  <EyeOff className="w-5 h-5" />
+                ) : (
+                  <Eye className="w-5 h-5" />
+                )}
+              </button>
+            </div>
           </div>
           <Button type="submit" disabled={loading} className="w-full">
             {loading ? "Signing up..." : "Sign Up"}
