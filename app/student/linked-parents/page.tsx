@@ -32,7 +32,7 @@ export default function LinkedParentsPage() {
       }
       setUser(data.user);
       // Fetch linked parents
-      const { data: parentLinks, error } = await supabase
+      const { data: parentLinks } = await supabase
         .from("parent_students")
         .select(
           "parent_id, profiles!parent_students_parent_id_fkey(full_name, id)",

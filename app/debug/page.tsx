@@ -13,7 +13,7 @@ import {
 export default function DebugPage() {
   const [logs, setLogs] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<{ email?: string } | null>(null);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -68,8 +68,10 @@ export default function DebugPage() {
       const res = await fetch("/api/test-push");
       const data = await res.json();
       data.logs.forEach((log: string) => addLog(`[Server] ${log}`));
-    } catch (err: any) {
-      addLog(`Server error: ${err.message}`);
+    } catch (err) {
+      addLog(
+        `Server error: ${err instanceof Error ? err.message : String(err)}`,
+      );
     }
   };
 
@@ -96,8 +98,8 @@ export default function DebugPage() {
 
       const data = await res.json();
       data.logs.forEach((log: string) => addLog(`[Server] ${log}`));
-    } catch (err: any) {
-      addLog(`Error: ${err.message}`);
+    } catch (err) {
+      addLog(`Error: ${err instanceof Error ? err.message : String(err)}`);
     }
 
     setLoading(false);
@@ -156,8 +158,8 @@ export default function DebugPage() {
 
       const data = await res.json();
       addLog(`Backend response: ${JSON.stringify(data)}`);
-    } catch (err: any) {
-      addLog(`Error: ${err.message}`);
+    } catch (err) {
+      addLog(`Error: ${err instanceof Error ? err.message : String(err)}`);
     }
 
     setLoading(false);
@@ -182,12 +184,11 @@ export default function DebugPage() {
       await reg.showNotification("🧪 Local Test", {
         body: "This is a local notification test",
         icon: "/icons/icon-192x192.png",
-        vibrate: [200, 100, 200],
         tag: "test",
       });
       addLog("Local notification triggered via service worker");
-    } catch (err: any) {
-      addLog(`Error: ${err.message}`);
+    } catch (err) {
+      addLog(`Error: ${err instanceof Error ? err.message : String(err)}`);
     }
 
     setLoading(false);

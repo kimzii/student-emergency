@@ -1,6 +1,6 @@
 const CACHE_VERSION = "emergency-app-v3";
 
-self.addEventListener("install", (event) => {
+self.addEventListener("install", () => {
   console.log("[Service Worker] Installing new version...");
   self.skipWaiting();
 });
