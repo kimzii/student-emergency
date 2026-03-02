@@ -9,7 +9,7 @@ import { Avatar } from "../../../components/ui/avatar";
 import { UserRound, LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-export default function ProfilePage() {
+export default function ParentProfilePage() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();

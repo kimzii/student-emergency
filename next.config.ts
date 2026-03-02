@@ -1,10 +1,6 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Allow serving manifest and service worker
-  experimental: {
-    appDir: true,
-  },
   // If you want to add custom headers for manifest and service worker:
   async headers() {
     return [
