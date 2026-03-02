@@ -13,8 +13,15 @@ import {
   TableCaption,
 } from "../../../components/ui/table";
 
+type EmergencyEvent = {
+  id: string;
+  status: string;
+  created_at: string;
+  location_name?: string;
+};
+
 export default function StudentHistoryPage() {
-  const [events, setEvents] = useState<any[]>([]);
+  const [events, setEvents] = useState<EmergencyEvent[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -31,8 +38,9 @@ export default function StudentHistoryPage() {
         .from("emergency_events")
         .select("id, status, created_at, location_name")
         .eq("student_id", studentId)
-        .order("created_at", { ascending: false });
-      setEvents(data || []);
+        .order("created_at", { ascending: false })
+        .limit(10);
+      setEvents((data as EmergencyEvent[]) || []);
       setLoading(false);
     }
     fetchHistory();
@@ -41,7 +49,9 @@ export default function StudentHistoryPage() {
   return (
     <main className="flex flex-1 flex-col items-center justify-center py-8 px-4">
       <Card className="w-full max-w-2xl p-8 flex flex-col items-center">
-        <h1 className="text-2xl font-bold mb-4 text-center">Emergency History</h1>
+        <h1 className="text-2xl font-bold mb-4 text-center">
+          Emergency History
+        </h1>
         {loading ? (
           <p className="text-gray-600">Loading...</p>
         ) : events.length === 0 ? (
@@ -63,7 +73,9 @@ export default function StudentHistoryPage() {
                     {new Date(event.created_at).toLocaleString()}
                   </TableCell>
                   <TableCell>{event.status}</TableCell>
-                  <TableCell>{event.location_name || "Unknown location"}</TableCell>
+                  <TableCell>
+                    {event.location_name || "Unknown location"}
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>

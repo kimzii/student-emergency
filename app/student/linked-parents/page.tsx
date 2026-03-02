@@ -62,31 +62,59 @@ export default function LinkedParentsPage() {
   }
 
   return (
-    <main className="flex flex-1 flex-col items-center justify-center py-8 px-4">
-      <Card className="w-full max-w-md p-8 flex flex-col items-center">
-        <h1 className="text-2xl font-bold mb-4 text-center">Linked Parents</h1>
+    <main className="flex flex-1 flex-col items-center justify-center py-8 px-4 min-h-screen">
+      <Card className="w-full max-w-md p-8 flex flex-col items-center shadow-xl rounded-2xl border border-gray-100">
+        <h1 className="text-2xl font-bold mb-6 text-center text-blue-900">
+          Linked Parents
+        </h1>
         {linkedParents.length === 0 ? (
-          <p className="text-gray-600 mb-6">No parents linked yet.</p>
-        ) : (
-          <div className="w-full mb-6">
-            <h2 className="text-lg font-semibold mb-2 text-center">
-              Your Linked Parents
-            </h2>
-            <ul className="space-y-2">
-              {linkedParents.map((link) => (
-                <li
-                  key={link.parent_id}
-                  className="p-2 bg-gray-100 rounded text-center"
-                >
-                  {link.profiles?.full_name || link.parent_id}
-                </li>
-              ))}
-            </ul>
+          <div className="flex flex-col items-center py-8">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-12 w-12 text-gray-300 mb-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M17 20h5v-2a4 4 0 00-3-3.87M9 20h6M3 20h5v-2a4 4 0 00-3-3.87M16 7a4 4 0 11-8 0 4 4 0 018 0z"
+              />
+            </svg>
+            <p className="text-gray-500 text-lg">No parents linked yet.</p>
           </div>
+        ) : (
+          <ul className="divide-y divide-gray-200 w-full mb-6">
+            {linkedParents.map((link) => (
+              <li key={link.parent_id} className="flex items-center gap-3 py-4">
+                <div className="flex items-center justify-center h-10 w-10 rounded-full bg-green-100">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-6 w-6 text-green-500"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5.121 17.804A13.937 13.937 0 0112 15c2.5 0 4.847.657 6.879 1.804M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                    />
+                  </svg>
+                </div>
+                <span className="font-semibold text-lg text-gray-800">
+                  {link.profiles?.full_name || link.parent_id}
+                </span>
+              </li>
+            ))}
+          </ul>
         )}
         <Button
           onClick={() => setShowQR(!showQR)}
-          className="flex items-center gap-2"
+          className="flex items-center gap-2 mt-2"
           variant={showQR ? "outline" : "default"}
         >
           {showQR ? (

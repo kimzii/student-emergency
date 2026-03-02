@@ -228,21 +228,6 @@ export default function ParentDashboard() {
             </p>
           )}
         </Card>
-
-        <Card className="w-full max-w-md p-8">
-          <h2 className="text-xl font-bold mb-4">Linked Students</h2>
-          {linkedStudents.length === 0 ? (
-            <p className="text-gray-500">No students linked yet.</p>
-          ) : (
-            <ul className="space-y-2">
-              {linkedStudents.map((link) => (
-                <li key={link.student_id} className="p-2 bg-gray-100 rounded">
-                  {link.profiles?.full_name || link.student_id}
-                </li>
-              ))}
-            </ul>
-          )}
-        </Card>
       </main>
     </>
   );
