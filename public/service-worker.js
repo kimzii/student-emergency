@@ -1,29 +1,49 @@
+const CACHE_VERSION = "emergency-app-v2";
+
 self.addEventListener("install", (event) => {
+  console.log("[Service Worker] Installing new version...");
   self.skipWaiting();
 });
 
 self.addEventListener("activate", (event) => {
-  event.waitUntil(self.clients.claim());
+  console.log("[Service Worker] Activating new version...");
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cacheName) => {
+          if (cacheName !== CACHE_VERSION) {
+            console.log("[Service Worker] Deleting old cache:", cacheName);
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    }).then(() => self.clients.claim())
+  );
 });
 
+// Network-first strategy for better updates
 self.addEventListener("fetch", (event) => {
+  // Skip non-GET requests and API calls
+  if (event.request.method !== "GET" || event.request.url.includes("/api/")) {
+    return;
+  }
+
   event.respondWith(
-    caches.open("emergency-app-v1").then((cache) => {
-      return cache.match(event.request).then((response) => {
-        return (
-          response ||
-          fetch(event.request).then((networkResponse) => {
-            if (
-              event.request.method === "GET" &&
-              event.request.url.startsWith(self.location.origin)
-            ) {
-              cache.put(event.request, networkResponse.clone());
-            }
-            return networkResponse;
-          })
-        );
-      });
-    }),
+    fetch(event.request)
+      .then((networkResponse) => {
+        // Cache successful responses
+        if (networkResponse.ok && event.request.url.startsWith(self.location.origin)) {
+          const responseClone = networkResponse.clone();
+          caches.open(CACHE_VERSION).then((cache) => {
+            cache.put(event.request, responseClone);
+          });
+        }
+        return networkResponse;
+      })
+      .catch(() => {
+        // Fall back to cache if network fails
+        return caches.match(event.request);
+      })
   );
 });
 
