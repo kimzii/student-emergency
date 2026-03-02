@@ -10,7 +10,7 @@ export default function StudentBottomNav() {
   const isActive = (path: string) => pathname.includes(path);
 
   return (
-    <nav className="fixed bottom-0 left-0 w-full bg-white border-t flex justify-around items-center py-2 z-30 h-20">
+    <nav className="fixed bottom-0 left-0 w-full rounded bg-white border-t flex justify-around items-center py-2 z-30 h-20">
       <Button
         variant="ghost"
         className={

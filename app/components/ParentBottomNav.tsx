@@ -10,7 +10,7 @@ export default function ParentBottomNav() {
   const isActive = (path: string) => pathname.includes(path);
 
   return (
-    <nav className="fixed bottom-0 left-0 w-full bg-white border-t flex justify-around items-center py-2 z-30">
+    <nav className="fixed bottom-0 left-0 w-full bg-white border-t flex justify-around items-center py-2 z-30 rounded">
       <Button
         variant="ghost"
         className={
