@@ -30,6 +30,20 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 400 });
   }
 
+  // Create profile in profiles table
+  if (data.user) {
+    const { error: profileError } = await supabase.from("profiles").insert({
+      id: data.user.id,
+      full_name: fullName,
+      role,
+    });
+
+    if (profileError) {
+      console.error("Error creating profile:", profileError);
+      // Don't fail signup if profile creation fails
+    }
+  }
+
   return NextResponse.json({
     user: data.user,
     session: data.session,

@@ -1,3 +1,11 @@
+-- profiles: stores user profile data
+create table if not exists profiles (
+  id uuid primary key references auth.users(id) on delete cascade,
+  full_name text not null,
+  role text check (role in ('student', 'parent')) not null,
+  created_at timestamptz not null default now()
+);
+
 -- parent_students: links parents to students (many-to-many)
 create table if not exists parent_students (
   parent_id uuid references profiles(id) on delete cascade,
@@ -37,6 +45,15 @@ create table if not exists push_tokens (
 -- =========================
 -- Row Level Security (RLS)
 -- =========================
+
+-- profiles RLS
+alter table profiles enable row level security;
+create policy "Users can view all profiles" on profiles
+  for select using (true);
+create policy "Users can insert their own profile" on profiles
+  for insert with check (auth.uid() = id);
+create policy "Users can update their own profile" on profiles
+  for update using (auth.uid() = id);
 
 -- parent_students RLS
 alter table parent_students enable row level security;

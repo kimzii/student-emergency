@@ -25,7 +25,15 @@ export async function GET(req: NextRequest) {
     .eq("id", studentId)
     .single();
 
-  if (error || !studentProfile) {
+  if (error) {
+    console.error("Error fetching student profile:", error);
+    return NextResponse.json(
+      { error: "Student not found.", details: error.message },
+      { status: 404 },
+    );
+  }
+
+  if (!studentProfile) {
     return NextResponse.json({ error: "Student not found." }, { status: 404 });
   }
 
