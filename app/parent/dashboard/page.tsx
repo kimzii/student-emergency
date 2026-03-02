@@ -21,6 +21,7 @@ import { Card } from "../../../components/ui/card";
 import { Button } from "../../../components/ui/button";
 import { User } from "@supabase/supabase-js";
 import { Scanner } from "@yudiel/react-qr-scanner";
+import PushNotificationSubscriber from "../../components/PushNotificationSubscriber";
 
 export default function ParentDashboard() {
   const [user, setUser] = useState<User | null>(null);
@@ -165,6 +166,9 @@ export default function ParentDashboard() {
           <h1 className="text-2xl font-bold mb-4 text-center">
             Parent Dashboard
           </h1>
+          <div className="mb-4">
+            <PushNotificationSubscriber />
+          </div>
           <p className="text-gray-600 mb-4 text-center">
             Scan your child&apos;s QR code to link your accounts.
           </p>

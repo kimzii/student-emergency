@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import RegisterServiceWorker from "./RegisterServiceWorker";
 import { Toaster } from "sonner";
+import InstallPWAPrompt from "./components/InstallPWAPrompt";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -47,6 +48,7 @@ export default function RootLayout({
       >
         <RegisterServiceWorker />
         <Toaster position="top-center" />
+        <InstallPWAPrompt />
         {children}
       </body>
     </html>
