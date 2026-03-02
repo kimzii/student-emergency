@@ -3,7 +3,7 @@ import Image from "next/image";
 
 export default function AppHeader() {
   return (
-    <header className="w-full py-4 px-10 shadow border-b flex items-center rounded">
+    <header className="w-full bg-white py-4 px-10 shadow border-b flex items-center rounded">
       <Image
         src="/icons/icon-192x192.png"
         alt="SafeLink Icon"
