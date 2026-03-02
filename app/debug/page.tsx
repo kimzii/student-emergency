@@ -98,14 +98,16 @@ export default function DebugPage() {
 
       const data = await res.json();
       data.logs.forEach((log: string) => addLog(`[Server] ${log}`));
-      
+
       if (data.success) {
         addLog("✅ Push sent successfully from server");
         addLog("⏳ Waiting for notification to appear...");
         addLog("If you don't see a notification:");
         addLog("  1. Check chrome://inspect/#service-workers");
         addLog("  2. Look for push event logs in service worker console");
-        addLog("  3. Make sure Chrome notifications are enabled in Android settings");
+        addLog(
+          "  3. Make sure Chrome notifications are enabled in Android settings",
+        );
       }
     } catch (err) {
       addLog(`Error: ${err instanceof Error ? err.message : String(err)}`);
@@ -213,12 +215,14 @@ export default function DebugPage() {
         await reg.update();
         addLog("Service worker update triggered");
         addLog("Close and reopen the app to use the new version");
-        
+
         // Wait a bit for update to complete
         setTimeout(async () => {
           const updatedReg = await navigator.serviceWorker.getRegistration();
           if (updatedReg?.waiting) {
-            addLog("New service worker is waiting - close all app tabs/windows and reopen");
+            addLog(
+              "New service worker is waiting - close all app tabs/windows and reopen",
+            );
           } else if (updatedReg?.installing) {
             addLog("New service worker is installing...");
           } else {
