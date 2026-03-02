@@ -5,9 +5,12 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 export async function POST(req: NextRequest) {
+  console.log("[PushSubscribe] POST request received");
+  
   // Get the access token from the Authorization header
   const authHeader = req.headers.get("authorization");
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    console.log("[PushSubscribe] No auth header");
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const accessToken = authHeader.replace("Bearer ", "");
@@ -25,33 +28,43 @@ export async function POST(req: NextRequest) {
   const { data: userData, error: userError } =
     await supabase.auth.getUser(accessToken);
   if (userError || !userData.user) {
+    console.log("[PushSubscribe] User verification failed:", userError);
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  
+  console.log("[PushSubscribe] User verified:", userData.user.id);
 
   const { subscription } = await req.json();
   if (!subscription || !subscription.endpoint) {
+    console.log("[PushSubscribe] Invalid subscription data");
     return NextResponse.json(
       { error: "Subscription data is required." },
       { status: 400 }
     );
   }
+  
+  console.log("[PushSubscribe] Subscription endpoint:", subscription.endpoint?.substring(0, 50) + "...");
 
   // Store the push subscription as JSON string in the token field
   const subscriptionString = JSON.stringify(subscription);
 
   // Check if token already exists for this user
-  const { data: existingToken } = await supabase
+  const { data: existingToken, error: existingError } = await supabase
     .from("push_tokens")
     .select("id")
     .eq("user_id", userData.user.id)
     .eq("token", subscriptionString)
     .single();
+  
+  console.log("[PushSubscribe] Existing token check:", existingToken, "Error:", existingError);
 
   if (existingToken) {
+    console.log("[PushSubscribe] Already subscribed");
     return NextResponse.json({ success: true, message: "Already subscribed" });
   }
 
   // Insert new push token
+  console.log("[PushSubscribe] Inserting new push token for user:", userData.user.id);
   const { error: insertError } = await supabase.from("push_tokens").insert({
     user_id: userData.user.id,
     token: subscriptionString,
@@ -59,10 +72,11 @@ export async function POST(req: NextRequest) {
   });
 
   if (insertError) {
-    console.error("Push token insert error:", insertError);
+    console.error("[PushSubscribe] Push token insert error:", insertError);
     return NextResponse.json({ error: insertError.message }, { status: 400 });
   }
 
+  console.log("[PushSubscribe] Token saved successfully");
   return NextResponse.json({ success: true });
 }
 

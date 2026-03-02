@@ -22,11 +22,14 @@ export default function PushNotificationSubscriber() {
 
     async function checkSubscription() {
       try {
+        console.log("[PushSubscriber] Checking subscription...");
         const registration = await navigator.serviceWorker.ready;
+        console.log("[PushSubscriber] Service worker ready:", registration);
         const subscription = await registration.pushManager.getSubscription();
+        console.log("[PushSubscriber] Current subscription:", subscription);
         setIsSubscribed(!!subscription);
       } catch (error) {
-        console.error("Error checking subscription:", error);
+        console.error("[PushSubscriber] Error checking subscription:", error);
       }
     }
 
@@ -36,8 +39,10 @@ export default function PushNotificationSubscriber() {
   async function subscribeToPush() {
     setLoading(true);
     try {
+      console.log("[PushSubscriber] Requesting notification permission...");
       // Request notification permission
       const permission = await Notification.requestPermission();
+      console.log("[PushSubscriber] Permission result:", permission);
       if (permission !== "granted") {
         toast.error("Notification permission denied");
         setLoading(false);
@@ -45,6 +50,7 @@ export default function PushNotificationSubscriber() {
       }
 
       const registration = await navigator.serviceWorker.ready;
+      console.log("[PushSubscriber] Service worker ready for subscription");
 
       // Get the VAPID public key from environment
       const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
@@ -55,10 +61,12 @@ export default function PushNotificationSubscriber() {
       }
 
       // Subscribe to push
+      console.log("[PushSubscriber] Subscribing with VAPID key:", vapidPublicKey?.substring(0, 20) + "...");
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
       });
+      console.log("[PushSubscriber] Subscription created:", JSON.stringify(subscription.toJSON()));
 
       // Get the current user
       const { data: userData } = await supabase.auth.getUser();
@@ -73,6 +81,7 @@ export default function PushNotificationSubscriber() {
       const accessToken = sessionData?.session?.access_token;
 
       // Save subscription to backend
+      console.log("[PushSubscriber] Saving subscription to backend...");
       const res = await fetch("/api/push-subscribe", {
         method: "POST",
         headers: {
@@ -84,11 +93,13 @@ export default function PushNotificationSubscriber() {
         }),
       });
 
+      const data = await res.json();
+      console.log("[PushSubscriber] Backend response:", res.status, data);
+
       if (res.ok) {
         setIsSubscribed(true);
         toast.success("Push notifications enabled!");
       } else {
-        const data = await res.json();
         toast.error(data.error || "Failed to subscribe");
       }
     } catch (error) {
