@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "../../lib/supabaseClient";
 import { Button } from "../../components/ui/button";
 import {
@@ -14,16 +14,33 @@ export default function DebugPage() {
   const [logs, setLogs] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState<{ email?: string } | null>(null);
+  const [pushEventsReceived, setPushEventsReceived] = useState<number>(0);
+
+  const addLog = useCallback((msg: string) => {
+    setLogs((prev) => [...prev, `${new Date().toLocaleTimeString()}: ${msg}`]);
+  }, []);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       setUser(data.user);
     });
-  }, []);
 
-  const addLog = (msg: string) => {
-    setLogs((prev) => [...prev, `${new Date().toLocaleTimeString()}: ${msg}`]);
-  };
+    // Listen for messages from service worker
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.addEventListener("message", (event) => {
+        console.log("Message from service worker:", event.data);
+        if (event.data.type === "PUSH_RECEIVED") {
+          setPushEventsReceived((prev) => prev + 1);
+          addLog(`📨 Push event received by service worker!`);
+          addLog(`   Data: ${JSON.stringify(event.data.payload)}`);
+        } else if (event.data.type === "NOTIFICATION_SHOWN") {
+          addLog(`🔔 Notification displayed: ${event.data.title}`);
+        } else if (event.data.type === "NOTIFICATION_ERROR") {
+          addLog(`❌ Notification error: ${event.data.error}`);
+        }
+      });
+    }
+  }, [addLog]);
 
   const checkStatus = async () => {
     setLogs([]);
@@ -259,8 +276,17 @@ export default function DebugPage() {
           <CardTitle>Push Notification Debug</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="text-sm text-gray-600">
-            User: {user?.email || "Not logged in"}
+          <div className="space-y-1">
+            <div className="text-sm text-gray-600">
+              User: {user?.email || "Not logged in"}
+            </div>
+            <div className="text-sm font-semibold text-green-600">
+              Push Events Received: {pushEventsReceived}
+            </div>
+            <div className="text-xs text-gray-500">
+              This counter increments when the service worker receives a push
+              event
+            </div>
           </div>
 
           <div className="flex flex-wrap gap-2">

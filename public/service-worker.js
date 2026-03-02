@@ -1,4 +1,4 @@
-const CACHE_VERSION = "emergency-app-v4";
+const CACHE_VERSION = "emergency-app-v5";
 
 self.addEventListener("install", () => {
   console.log("[Service Worker] Installing new version...");
@@ -73,6 +73,18 @@ self.addEventListener("push", (event) => {
     console.error("[Service Worker] Error parsing push data:", err);
   }
 
+  // Notify all clients that a push was received
+  event.waitUntil(
+    self.clients.matchAll().then((clients) => {
+      clients.forEach((client) => {
+        client.postMessage({
+          type: "PUSH_RECEIVED",
+          payload: data,
+        });
+      });
+    }),
+  );
+
   const options = {
     body: body,
     icon: "/icons/icon-192x192.png",
@@ -93,10 +105,27 @@ self.addEventListener("push", (event) => {
     .showNotification(title, options)
     .then(() => {
       console.log("[Service Worker] ✅ Notification shown successfully!");
-      return true;
+      // Notify clients that notification was shown
+      return self.clients.matchAll().then((clients) => {
+        clients.forEach((client) => {
+          client.postMessage({
+            type: "NOTIFICATION_SHOWN",
+            title: title,
+          });
+        });
+      });
     })
     .catch((err) => {
       console.error("[Service Worker] ❌ Error showing notification:", err);
+      // Notify clients of error
+      self.clients.matchAll().then((clients) => {
+        clients.forEach((client) => {
+          client.postMessage({
+            type: "NOTIFICATION_ERROR",
+            error: err.message || String(err),
+          });
+        });
+      });
       // Fallback to simple notification
       return self.registration.showNotification("Alert!", {
         body: "You have a new notification",
