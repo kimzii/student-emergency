@@ -3,7 +3,12 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../../lib/supabaseClient";
 import { Button } from "../../components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../../components/ui/card";
 
 export default function DebugPage() {
   const [logs, setLogs] = useState<string[]>([]);
@@ -158,9 +163,41 @@ export default function DebugPage() {
     setLoading(false);
   };
 
+  const showLocalNotification = async () => {
+    setLoading(true);
+    addLog("Testing local notification display...");
+
+    try {
+      const permission = await Notification.requestPermission();
+      addLog(`Permission: ${permission}`);
+
+      if (permission !== "granted") {
+        addLog("ERROR: Permission denied");
+        setLoading(false);
+        return;
+      }
+
+      // Try showing notification via service worker
+      const reg = await navigator.serviceWorker.ready;
+      await reg.showNotification("🧪 Local Test", {
+        body: "This is a local notification test",
+        icon: "/icons/icon-192x192.png",
+        vibrate: [200, 100, 200],
+        tag: "test",
+      });
+      addLog("Local notification triggered via service worker");
+    } catch (err: any) {
+      addLog(`Error: ${err.message}`);
+    }
+
+    setLoading(false);
+  };
+
   function urlBase64ToUint8Array(base64String: string) {
     const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
-    const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+    const base64 = (base64String + padding)
+      .replace(/-/g, "+")
+      .replace(/_/g, "/");
     const rawData = window.atob(base64);
     const outputArray = new Uint8Array(rawData.length);
     for (let i = 0; i < rawData.length; ++i) {
@@ -184,17 +221,30 @@ export default function DebugPage() {
             <Button onClick={checkStatus} disabled={loading}>
               Check Status
             </Button>
+            <Button
+              onClick={showLocalNotification}
+              disabled={loading}
+              variant="secondary"
+            >
+              Test Local Notification
+            </Button>
             <Button onClick={resubscribe} disabled={loading} variant="outline">
               Re-subscribe
             </Button>
-            <Button onClick={sendTestNotification} disabled={loading} variant="secondary">
+            <Button
+              onClick={sendTestNotification}
+              disabled={loading}
+              variant="secondary"
+            >
               Send Test Notification
             </Button>
           </div>
 
           <div className="bg-black text-green-400 p-4 rounded font-mono text-xs max-h-96 overflow-y-auto">
             {logs.length === 0 ? (
-              <span className="text-gray-500">Click a button to start debugging...</span>
+              <span className="text-gray-500">
+                Click a button to start debugging...
+              </span>
             ) : (
               logs.map((log, i) => <div key={i}>{log}</div>)
             )}

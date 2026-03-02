@@ -1,4 +1,4 @@
-const CACHE_VERSION = "emergency-app-v2";
+const CACHE_VERSION = "emergency-app-v3";
 
 self.addEventListener("install", (event) => {
   console.log("[Service Worker] Installing new version...");
@@ -8,16 +8,19 @@ self.addEventListener("install", (event) => {
 self.addEventListener("activate", (event) => {
   console.log("[Service Worker] Activating new version...");
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_VERSION) {
-            console.log("[Service Worker] Deleting old cache:", cacheName);
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    }).then(() => self.clients.claim())
+    caches
+      .keys()
+      .then((cacheNames) => {
+        return Promise.all(
+          cacheNames.map((cacheName) => {
+            if (cacheName !== CACHE_VERSION) {
+              console.log("[Service Worker] Deleting old cache:", cacheName);
+              return caches.delete(cacheName);
+            }
+          }),
+        );
+      })
+      .then(() => self.clients.claim()),
   );
 });
 
@@ -32,7 +35,10 @@ self.addEventListener("fetch", (event) => {
     fetch(event.request)
       .then((networkResponse) => {
         // Cache successful responses
-        if (networkResponse.ok && event.request.url.startsWith(self.location.origin)) {
+        if (
+          networkResponse.ok &&
+          event.request.url.startsWith(self.location.origin)
+        ) {
           const responseClone = networkResponse.clone();
           caches.open(CACHE_VERSION).then((cache) => {
             cache.put(event.request, responseClone);
@@ -43,15 +49,22 @@ self.addEventListener("fetch", (event) => {
       .catch(() => {
         // Fall back to cache if network fails
         return caches.match(event.request);
-      })
+      }),
   );
 });
 
 // Handle push notifications
 self.addEventListener("push", (event) => {
   console.log("[Service Worker] Push event received:", event);
-  const data = event.data ? event.data.json() : {};
-  console.log("[Service Worker] Push data:", data);
+
+  let data = {};
+  try {
+    data = event.data ? event.data.json() : {};
+    console.log("[Service Worker] Push data:", data);
+  } catch (err) {
+    console.error("[Service Worker] Error parsing push data:", err);
+  }
+
   const title = data.title || "Emergency Alert!";
   const options = {
     body: data.body || "Your child has triggered an emergency alert!",
@@ -60,14 +73,30 @@ self.addEventListener("push", (event) => {
     vibrate: [200, 100, 200, 100, 200],
     tag: "emergency-alert",
     requireInteraction: true,
+    silent: false,
     data: {
       url: data.url || "/parent/dashboard",
       lat: data.lat,
       lng: data.lng,
     },
   };
+
   console.log("[Service Worker] Showing notification:", title, options);
-  event.waitUntil(self.registration.showNotification(title, options));
+
+  event.waitUntil(
+    self.registration
+      .showNotification(title, options)
+      .then(() => {
+        console.log("[Service Worker] Notification displayed successfully");
+      })
+      .catch((err) => {
+        console.error("[Service Worker] Error showing notification:", err);
+        // Try showing a basic notification as fallback
+        return self.registration.showNotification("Emergency Alert!", {
+          body: "Tap to view details",
+        });
+      }),
+  );
 });
 
 // Handle notification click
