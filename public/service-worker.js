@@ -29,7 +29,9 @@ self.addEventListener("fetch", (event) => {
 
 // Handle push notifications
 self.addEventListener("push", (event) => {
+  console.log("[Service Worker] Push event received:", event);
   const data = event.data ? event.data.json() : {};
+  console.log("[Service Worker] Push data:", data);
   const title = data.title || "Emergency Alert!";
   const options = {
     body: data.body || "Your child has triggered an emergency alert!",
@@ -44,7 +46,7 @@ self.addEventListener("push", (event) => {
       lng: data.lng,
     },
   };
-
+  console.log("[Service Worker] Showing notification:", title, options);
   event.waitUntil(self.registration.showNotification(title, options));
 });
 
