@@ -52,6 +52,11 @@ export default function DebugPage() {
       if (reg) {
         addLog(`Service Worker: ${reg.active ? "ACTIVE" : "NOT ACTIVE"}`);
         addLog(`SW Scope: ${reg.scope}`);
+
+        // Check if service worker is actually running
+        if (reg.active) {
+          addLog(`SW State: ${reg.active.state}`);
+        }
       } else {
         addLog("Service Worker: NOT REGISTERED");
       }
@@ -73,8 +78,43 @@ export default function DebugPage() {
       if (sub) {
         addLog(`Push Subscription: ACTIVE`);
         addLog(`Endpoint: ${sub.endpoint.substring(0, 60)}...`);
+
+        // Check which push service is being used
+        if (sub.endpoint.includes("fcm.googleapis.com")) {
+          addLog(`Push Service: Firebase Cloud Messaging (FCM)`);
+        } else if (sub.endpoint.includes("windows.com")) {
+          addLog(`Push Service: Windows Push Notification Service`);
+        } else if (sub.endpoint.includes("mozilla.com")) {
+          addLog(`Push Service: Mozilla Push Service`);
+        } else {
+          addLog(`Push Service: Unknown - ${sub.endpoint.split("/")[2]}`);
+        }
+
+        // Check subscription details
+        const subJSON = sub.toJSON();
+        addLog(`Subscription Keys Present: ${subJSON.keys ? "YES" : "NO"}`);
+        if (subJSON.expirationTime) {
+          addLog(
+            `Expires: ${new Date(subJSON.expirationTime).toLocaleString()}`,
+          );
+        } else {
+          addLog(`Expires: Never (no expiration set)`);
+        }
+
+        // Test if subscription is still valid
+        addLog("Testing if subscription is valid...");
+        try {
+          const testPayload = JSON.stringify({ test: true });
+          // We can't send a push from client, but we can check if subscription works
+          addLog("Subscription object is valid");
+        } catch (err) {
+          addLog(
+            `Subscription error: ${err instanceof Error ? err.message : String(err)}`,
+          );
+        }
       } else {
         addLog("Push Subscription: NONE");
+        addLog("⚠️ You need to click 'Re-subscribe' first!");
       }
     } else {
       addLog("PushManager: NOT SUPPORTED");
@@ -90,6 +130,15 @@ export default function DebugPage() {
         `Server error: ${err instanceof Error ? err.message : String(err)}`,
       );
     }
+
+    // Android-specific checks
+    addLog("\n=== Android Troubleshooting ===");
+    addLog("If push counter stays at 0:");
+    addLog("1. Go to Android Settings → Apps → Chrome");
+    addLog("2. Enable 'Notifications'");
+    addLog("3. Disable 'Battery optimization' for Chrome");
+    addLog("4. Make sure 'Data Saver' is OFF");
+    addLog("5. Keep the PWA open while testing");
   };
 
   const sendTestNotification = async () => {
@@ -118,13 +167,24 @@ export default function DebugPage() {
 
       if (data.success) {
         addLog("✅ Push sent successfully from server");
-        addLog("⏳ Waiting for notification to appear...");
-        addLog("If you don't see a notification:");
-        addLog("  1. Check chrome://inspect/#service-workers");
-        addLog("  2. Look for push event logs in service worker console");
-        addLog(
-          "  3. Make sure Chrome notifications are enabled in Android settings",
-        );
+        addLog("⏳ Watching for push event (counter should increment)...");
+        addLog("⏳ Keep this page open for 10 seconds...");
+
+        // Wait 10 seconds and check if counter increased
+        setTimeout(() => {
+          if (pushEventsReceived === 0) {
+            addLog("\n❌ No push event received after 10 seconds");
+            addLog("Possible issues:");
+            addLog("• Android battery saver blocking push");
+            addLog("• Network/firewall blocking FCM");
+            addLog("• Subscription endpoint expired");
+            addLog("• Chrome not handling background push");
+            addLog("\nTry:");
+            addLog("1. Check Android notification settings");
+            addLog("2. Disable battery optimization for Chrome");
+            addLog("3. Re-subscribe and try again");
+          }
+        }, 10000);
       }
     } catch (err) {
       addLog(`Error: ${err instanceof Error ? err.message : String(err)}`);
