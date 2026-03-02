@@ -1,0 +1,15 @@
+"use client";
+import Image from "next/image";
+
+export default function AppHeader() {
+  return (
+    <header className="w-full py-4 px-10 shadow border-b flex items-center">
+      <Image
+        src="/icons/icon-192x192.png"
+        alt="SafeLink Icon"
+        width={32}
+        height={32}
+      />
+    </header>
+  );
+}

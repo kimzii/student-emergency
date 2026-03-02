@@ -10,7 +10,7 @@ export default function StudentBottomNav() {
   const isActive = (path: string) => pathname.includes(path);
 
   return (
-    <nav className="fixed bottom-0 left-0 w-full bg-white border-t flex justify-around items-center py-2 z-30">
+    <nav className="fixed bottom-0 left-0 w-full bg-white border-t flex justify-around items-center py-2 z-30 h-20">
       <Button
         variant="ghost"
         className={
@@ -18,8 +18,7 @@ export default function StudentBottomNav() {
         }
         onClick={() => router.push("/student/dashboard")}
       >
-        <Home className="w-6 h-6" />
-        <span className="text-xs">Home</span>
+        <Home className="w-10 h-10" />
       </Button>
       <Button
         variant="ghost"
@@ -28,18 +27,7 @@ export default function StudentBottomNav() {
         }
         onClick={() => router.push("/student/history")}
       >
-        <History className="w-6 h-6" />
-        <span className="text-xs">History</span>
-      </Button>
-      <Button
-        variant="ghost"
-        className={
-          isActive("/student/profile") ? "text-destructive" : "text-gray-500"
-        }
-        onClick={() => router.push("/student/profile")}
-      >
-        <User className="w-6 h-6" />
-        <span className="text-xs">Profile</span>
+        <History className="w-10 h-10" />
       </Button>
       <Button
         variant="ghost"
@@ -50,8 +38,16 @@ export default function StudentBottomNav() {
         }
         onClick={() => router.push("/student/linked-parents")}
       >
-        <Link2 className="w-6 h-6" />
-        <span className="text-xs">Parents</span>
+        <Link2 className="w-10 h-10" />
+      </Button>
+      <Button
+        variant="ghost"
+        className={
+          isActive("/student/profile") ? "text-destructive" : "text-gray-500"
+        }
+        onClick={() => router.push("/student/profile")}
+      >
+        <User className="w-10 h-10" />
       </Button>
     </nav>
   );
