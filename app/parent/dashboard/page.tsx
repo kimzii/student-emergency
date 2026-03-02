@@ -83,7 +83,9 @@ export default function ParentDashboard() {
   async function handleScan(result: unknown) {
     // The scanner returns an array of objects with rawValue
     if (!Array.isArray(result) || !result[0]?.rawValue) return;
-    const studentId = result[0].rawValue as string;
+    const studentId = (result[0].rawValue as string).trim();
+    console.log("Scanned student ID:", studentId);
+    console.log("Student ID length:", studentId.length);
     setScanning(false);
     setLinkStatus("Fetching student info...");
 
@@ -97,6 +99,7 @@ export default function ParentDashboard() {
         setScannedStudent(data);
         setLinkStatus(null);
       } else {
+        console.error("Error response:", data);
         setLinkStatus(data.error || "Failed to fetch student info.");
       }
     } catch {

@@ -22,6 +22,7 @@ export default function LinkedParentsPage() {
         router.replace("/login");
         return;
       }
+      console.log("Student user ID for QR:", data.user.id);
       setUser(data.user);
       setLoading(false);
     }
@@ -69,6 +70,7 @@ export default function LinkedParentsPage() {
             <div className="bg-white p-4 rounded-lg border">
               <QRCode value={user?.id || ""} size={160} />
             </div>
+            <p className="text-xs text-gray-400 mt-2">ID: {user?.id}</p>
           </div>
         )}
       </Card>

@@ -7,7 +7,7 @@ const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 // GET endpoint to fetch student info by ID
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
-  const studentId = searchParams.get("studentId");
+  let studentId = searchParams.get("studentId");
 
   if (!studentId) {
     return NextResponse.json(
@@ -15,6 +15,9 @@ export async function GET(req: NextRequest) {
       { status: 400 },
     );
   }
+
+  // Trim whitespace from studentId
+  studentId = studentId.trim();
 
   const supabase = createClient(supabaseUrl, supabaseKey);
 
@@ -27,10 +30,45 @@ export async function GET(req: NextRequest) {
 
   if (error) {
     console.error("Error fetching student profile:", error);
-    return NextResponse.json(
-      { error: "Student not found.", details: error.message },
-      { status: 404 },
-    );
+    console.log("Student ID:", studentId);
+    console.log("Error code:", error.code);
+  }
+
+  // If not found in profiles (error PGRST116 = no rows), try auth.users as fallback
+  if (!studentProfile && error?.code === "PGRST116") {
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (serviceRoleKey) {
+      const adminSupabase = createClient(supabaseUrl, serviceRoleKey);
+      const { data: authUser } =
+        await adminSupabase.auth.admin.getUserById(studentId);
+
+      if (authUser?.user) {
+        const fullName = authUser.user.user_metadata?.full_name || "Unknown";
+        const role = authUser.user.user_metadata?.role;
+        const email = authUser.user.email || "";
+
+        if (role !== "student") {
+          return NextResponse.json(
+            { error: "This is not a student account." },
+            { status: 400 },
+          );
+        }
+
+        // Create the profile in profiles table for future use
+        await supabase.from("profiles").insert({
+          id: authUser.user.id,
+          full_name: fullName,
+          role,
+        });
+
+        return NextResponse.json({
+          id: authUser.user.id,
+          full_name: fullName,
+          email: email,
+        });
+      }
+    }
+    return NextResponse.json({ error: "Student not found." }, { status: 404 });
   }
 
   if (!studentProfile) {
@@ -44,13 +82,14 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  // Get email from auth.users using service role key if available, 
+  // Get email from auth.users using service role key if available,
   // otherwise return profile data without email
   let email = "";
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (serviceRoleKey) {
     const adminSupabase = createClient(supabaseUrl, serviceRoleKey);
-    const { data: authUser } = await adminSupabase.auth.admin.getUserById(studentId);
+    const { data: authUser } =
+      await adminSupabase.auth.admin.getUserById(studentId);
     email = authUser?.user?.email || "";
   }
 
