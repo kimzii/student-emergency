@@ -292,54 +292,59 @@ export default function ParentDashboard() {
 
         {/* Active Emergency Events */}
         {activeEmergencies.length > 0 && (
-          <Card className="w-full max-w-md p-6 mb-8 border border-destructive bg-destructive/10">
+          <Card className="w-full max-w-md p-6 mb-8 border bg-white">
             <h2 className="text-xl font-bold mb-4 text-destructive flex items-center gap-2">
               <Siren className="w-6 h-6 text-destructive" /> Active Emergencies
             </h2>
-            <ul className="space-y-4">
-              {activeEmergencies.map((event) => {
-                const studentName =
-                  linkedStudents.find((s) => s.student_id === event.student_id)
-                    ?.profiles?.full_name || "Student";
-                return (
-                  <li
-                    key={event.id}
-                    className="p-4 border border-destructive rounded-lg bg-destructive/20 flex flex-col gap-2"
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="font-semibold text-lg text-destructive-foreground">
-                        {studentName}
-                      </span>
-                      <span className="text-xs text-muted-foreground">
-                        {new Date(event.created_at).toLocaleString()}
-                      </span>
-                    </div>
-                    <p className="text-muted-foreground text-sm">
-                      {event.location_name ||
-                        `Lat: ${event.lat}, Lng: ${event.lng}`}
-                    </p>
-                    <div className="flex gap-2 mt-2">
-                      <Button
-                        variant="outline"
-                        className="flex-1 flex items-center gap-2 border-primary text-primary"
-                        onClick={() => openGoogleMaps(event.lat, event.lng)}
-                      >
-                        <MapPin className="w-5 h-5 text-primary" />
-                        Locate
-                      </Button>
-                      <Button
-                        className="flex-1 flex items-center gap-2 bg-success text-success-foreground hover:bg-success/80"
-                        onClick={() => handleResolve(event.id)}
-                        disabled={resolvingId === event.id}
-                      >
-                        <CheckCircle className="w-5 h-5 text-success-foreground" />
-                        {resolvingId === event.id ? "Resolving..." : "Resolve"}
-                      </Button>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
+            <div className="overflow-x-auto w-full">
+              <ul className="flex flex-row gap-4">
+                {activeEmergencies.map((event) => {
+                  const studentName =
+                    linkedStudents.find(
+                      (s) => s.student_id === event.student_id,
+                    )?.profiles?.full_name || "Student";
+                  return (
+                    <li
+                      key={event.id}
+                      className="min-w-[300px] p-4 border rounded-lg bg-gray-50 flex flex-col gap-2"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold text-lg text-destructive">
+                          {studentName}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(event.created_at).toLocaleString()}
+                        </span>
+                      </div>
+                      <p className="text-muted-foreground text-sm">
+                        {event.location_name ||
+                          `Lat: ${event.lat}, Lng: ${event.lng}`}
+                      </p>
+                      <div className="flex gap-2 mt-2">
+                        <Button
+                          variant="outline"
+                          className="flex-1 flex items-center gap-2 border-primary text-primary"
+                          onClick={() => openGoogleMaps(event.lat, event.lng)}
+                        >
+                          <MapPin className="w-5 h-5 text-primary" />
+                          Locate
+                        </Button>
+                        <Button
+                          className="flex-1 flex items-center gap-2 bg-success text-success-foreground hover:bg-success/80 border border-success"
+                          onClick={() => handleResolve(event.id)}
+                          disabled={resolvingId === event.id}
+                        >
+                          <CheckCircle className="w-5 h-5 text-success-foreground" />
+                          {resolvingId === event.id
+                            ? "Resolving..."
+                            : "Resolve"}
+                        </Button>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
           </Card>
         )}
       </main>
