@@ -36,7 +36,7 @@ export default function ParentProfilePage() {
   }
 
   return (
-    <main className="flex flex-1 flex-col items-center justify-center py-8 px-4 min-h-screen">
+    <main className="flex flex-1 flex-col items-center justify-center py-8 px-4">
       <Card className="w-full max-w-md p-8 flex flex-col items-center shadow-xl rounded-2xl border border-gray-100">
         <div className="flex flex-col items-center mb-6">
           <Avatar className="mb-2 w-20 h-20 shadow-md ring-2 ring-blue-200">

@@ -62,7 +62,7 @@ export default function LinkedParentsPage() {
   }
 
   return (
-    <main className="flex flex-1 flex-col items-center justify-center py-8 px-4 min-h-screen">
+    <main className="flex flex-1 flex-col items-center justify-center py-8 px-4">
       <Card className="w-full max-w-md p-8 flex flex-col items-center shadow-xl rounded-2xl border border-gray-100">
         <h1 className="text-2xl font-bold mb-6 text-center text-blue-900">
           Linked Parents

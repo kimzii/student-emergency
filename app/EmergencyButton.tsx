@@ -70,7 +70,7 @@ export default function EmergencyButton() {
   }
 
   return (
-    <div className="flex items-center justify-center w-full">
+    <div className="flex items-center justify-center w-full z-30">
       <div
         className="relative flex items-center justify-center"
         style={{ width: 220, height: 220 }}
