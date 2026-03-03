@@ -15,6 +15,17 @@ type ScannedStudent = {
   full_name: string;
   email: string;
 };
+// Type for emergency events
+type EmergencyEvent = {
+  id: string;
+  student_id: string;
+  lat: number;
+  lng: number;
+  location_name?: string;
+  status: string;
+  created_at: string;
+  student_name?: string;
+};
 import { useRouter } from "next/navigation";
 import { supabase } from "../../../lib/supabaseClient";
 import { Card } from "../../../components/ui/card";
@@ -22,6 +33,7 @@ import { Button } from "../../../components/ui/button";
 import { User } from "@supabase/supabase-js";
 import { Scanner } from "@yudiel/react-qr-scanner";
 import PushNotificationSubscriber from "../../components/PushNotificationSubscriber";
+import { MapPin, CheckCircle, Siren } from "lucide-react";
 
 export default function ParentDashboard() {
   const [user, setUser] = useState<User | null>(null);
@@ -33,6 +45,10 @@ export default function ParentDashboard() {
     null,
   );
   const [isLinking, setIsLinking] = useState(false);
+  const [activeEmergencies, setActiveEmergencies] = useState<EmergencyEvent[]>(
+    [],
+  );
+  const [resolvingId, setResolvingId] = useState<string | null>(null);
   const router = useRouter();
 
   // Move fetchLinkedStudents above useEffect
@@ -61,6 +77,42 @@ export default function ParentDashboard() {
     }
   }
 
+  // Fetch active emergency events for linked students
+  async function fetchActiveEmergencies(studentIds: string[]) {
+    if (studentIds.length === 0) {
+      setActiveEmergencies([]);
+      return;
+    }
+    const { data } = await supabase
+      .from("emergency_events")
+      .select("id, student_id, lat, lng, location_name, status, created_at")
+      .in("student_id", studentIds)
+      .eq("status", "active")
+      .order("created_at", { ascending: false });
+    if (data) {
+      setActiveEmergencies(data as EmergencyEvent[]);
+    }
+  }
+
+  // Resolve an emergency event
+  async function handleResolve(eventId: string) {
+    setResolvingId(eventId);
+    const { error } = await supabase
+      .from("emergency_events")
+      .update({ status: "resolved" })
+      .eq("id", eventId);
+    if (!error && linkedStudents.length > 0) {
+      await fetchActiveEmergencies(linkedStudents.map((s) => s.student_id));
+    }
+    setResolvingId(null);
+  }
+
+  // Open Google Maps for navigation
+  function openGoogleMaps(lat: number, lng: number) {
+    const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+    window.open(url, "_blank");
+  }
+
   useEffect(() => {
     async function fetchUser() {
       const { data } = await supabase.auth.getUser();
@@ -79,6 +131,15 @@ export default function ParentDashboard() {
     }
     fetchUser();
   }, [router]);
+
+  // Fetch active emergencies when linked students change
+  useEffect(() => {
+    if (linkedStudents.length > 0) {
+      (async () => {
+        await fetchActiveEmergencies(linkedStudents.map((s) => s.student_id));
+      })();
+    }
+  }, [linkedStudents]);
 
   // Fetch student info after scanning
   async function handleScan(result: unknown) {
@@ -228,6 +289,59 @@ export default function ParentDashboard() {
             </p>
           )}
         </Card>
+
+        {/* Active Emergency Events */}
+        {activeEmergencies.length > 0 && (
+          <Card className="w-full max-w-md p-6 mb-8">
+            <h2 className="text-xl font-bold mb-4 text-red-600 flex items-center gap-2">
+              <Siren className="w-6 h-6" /> Active Emergencies
+            </h2>
+            <ul className="space-y-4">
+              {activeEmergencies.map((event) => {
+                const studentName =
+                  linkedStudents.find((s) => s.student_id === event.student_id)
+                    ?.profiles?.full_name || "Student";
+                return (
+                  <li
+                    key={event.id}
+                    className="p-4 border rounded-lg bg-red-50 flex flex-col gap-2"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-semibold text-lg">
+                        {studentName}
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        {new Date(event.created_at).toLocaleString()}
+                      </span>
+                    </div>
+                    <p className="text-gray-700 text-sm">
+                      {event.location_name ||
+                        `Lat: ${event.lat}, Lng: ${event.lng}`}
+                    </p>
+                    <div className="flex gap-2 mt-2">
+                      <Button
+                        variant="outline"
+                        className="flex-1 flex items-center gap-2"
+                        onClick={() => openGoogleMaps(event.lat, event.lng)}
+                      >
+                        <MapPin className="w-5 h-5 text-blue-500" />
+                        Locate
+                      </Button>
+                      <Button
+                        className="flex-1 flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white"
+                        onClick={() => handleResolve(event.id)}
+                        disabled={resolvingId === event.id}
+                      >
+                        <CheckCircle className="w-5 h-5" />
+                        {resolvingId === event.id ? "Resolving..." : "Resolve"}
+                      </Button>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </Card>
+        )}
       </main>
     </>
   );
