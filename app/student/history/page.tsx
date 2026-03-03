@@ -39,7 +39,7 @@ export default function StudentHistoryPage() {
         .select("id, status, created_at, location_name")
         .eq("student_id", studentId)
         .order("created_at", { ascending: false })
-        .limit(10);
+        .limit(5);
       setEvents((data as EmergencyEvent[]) || []);
       setLoading(false);
     }
@@ -47,7 +47,7 @@ export default function StudentHistoryPage() {
   }, []);
 
   return (
-    <main className="flex flex-1 flex-col items-center justify-center py-8 px-4">
+    <main className="flex flex-1 flex-col items-center justify-center pt-20 pb-24 px-4">
       <Card className="w-full max-w-2xl p-8 flex flex-col items-center">
         <h1 className="text-2xl font-bold mb-4 text-center">
           Emergency History
@@ -57,29 +57,27 @@ export default function StudentHistoryPage() {
         ) : events.length === 0 ? (
           <p className="text-gray-600">No emergency events found.</p>
         ) : (
-          <Table>
-            <TableCaption>Your emergency history</TableCaption>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Date</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Location</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {events.map((event) => (
-                <TableRow key={event.id}>
-                  <TableCell>
+          <div className="w-full flex flex-col gap-4">
+            {events.map((event) => (
+              <Card
+                key={event.id}
+                className="w-full p-4 flex flex-col gap-2 bg-gray-50"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="font-semibold text-lg text-destructive">
+                    {event.status.charAt(0).toUpperCase() +
+                      event.status.slice(1)}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
                     {new Date(event.created_at).toLocaleString()}
-                  </TableCell>
-                  <TableCell>{event.status}</TableCell>
-                  <TableCell>
-                    {event.location_name || "Unknown location"}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                  </span>
+                </div>
+                <p className="text-muted-foreground text-sm">
+                  {event.location_name || "Unknown location"}
+                </p>
+              </Card>
+            ))}
+          </div>
         )}
       </Card>
     </main>
