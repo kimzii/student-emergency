@@ -1,7 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import webpush from "web-push";
-import twilio from "twilio";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -140,20 +139,13 @@ export async function POST(req: NextRequest) {
       profilesError,
     );
 
-    // Send SMS directly via Twilio (not via HTTP call to avoid localhost issues)
-    const twilioSid = process.env.TWILIO_ACCOUNT_SID;
-    const twilioToken = process.env.TWILIO_AUTH_TOKEN;
-    const twilioFrom = process.env.TWILIO_PHONE_NUMBER;
+    // Send SMS via Semaphore (Philippine SMS gateway)
+    const semaphoreKey = process.env.SEMAPHORE_API_KEY;
+    const senderName = process.env.SEMAPHORE_SENDER_NAME || "SafeLink";
 
-    console.log(
-      "[Emergency] Twilio configured:",
-      !!twilioSid,
-      !!twilioToken,
-      !!twilioFrom,
-    );
+    console.log("[Emergency] Semaphore configured:", !!semaphoreKey);
 
-    if (parentProfiles && twilioSid && twilioToken && twilioFrom) {
-      const twilioClient = twilio(twilioSid, twilioToken);
+    if (parentProfiles && semaphoreKey) {
       for (const parent of parentProfiles) {
         console.log(
           "[Emergency] Parent phone_number:",
@@ -163,17 +155,29 @@ export async function POST(req: NextRequest) {
         );
         if (parent.sms_enabled !== false && parent.phone_number) {
           try {
-            // Strip spaces/dashes to ensure E.164 format for Twilio
             const cleanPhone = parent.phone_number.replace(/\s+|-/g, "");
-            const msg = await twilioClient.messages.create({
-              body: `🚨 Emergency Alert! ${studentName} has triggered an SOS at ${location_name}. Location: https://www.google.com/maps?q=${lat},${lng}`,
-              from: twilioFrom,
-              to: cleanPhone,
-            });
-            console.log("[Emergency] SMS sent successfully. SID:", msg.sid);
+            const smsRes = await fetch(
+              "https://api.semaphore.co/api/v4/messages",
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  apikey: semaphoreKey,
+                  number: cleanPhone,
+                  message: `🚨 Emergency Alert! ${studentName} has triggered an SOS at ${location_name}. Location: https://www.google.com/maps?q=${lat},${lng}`,
+                  sendername: senderName,
+                }),
+              },
+            );
+            const smsData = await smsRes.json();
+            console.log(
+              "[Emergency] Semaphore SMS result:",
+              smsRes.status,
+              JSON.stringify(smsData),
+            );
           } catch (err: unknown) {
             console.error(
-              "[Emergency] Twilio SMS error:",
+              "[Emergency] Semaphore SMS error:",
               err instanceof Error ? err.message : String(err),
             );
           }
@@ -183,7 +187,7 @@ export async function POST(req: NextRequest) {
       }
     } else {
       console.log(
-        "[Emergency] SMS skipped - Twilio not configured or no parent profiles",
+        "[Emergency] SMS skipped - Semaphore not configured or no parent profiles",
       );
     }
 
