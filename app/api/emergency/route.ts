@@ -139,10 +139,10 @@ export async function POST(req: NextRequest) {
       profilesError,
     );
 
-    // Send SMS to parents with sms_enabled (only if explicitly enabled)
+    // Send SMS to parents — send if sms_enabled is true OR null (null = not set = default on)
     if (parentProfiles) {
       for (const parent of parentProfiles) {
-        if (parent.sms_enabled === true && parent.phone_number) {
+        if (parent.sms_enabled !== false && parent.phone_number) {
           try {
             const smsRes = await fetch(
               `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/send-sms`,
