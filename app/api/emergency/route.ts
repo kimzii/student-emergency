@@ -126,11 +126,50 @@ export async function POST(req: NextRequest) {
     const parentIds = parentLinks.map((link) => link.parent_id);
     console.log("[Emergency] Parent IDs:", parentIds);
 
-    // Get push tokens for all linked parents
+    // Get parent profiles with preferences and phone numbers
+    const { data: parentProfiles } = await adminClient
+      .from("profiles")
+      .select("id, phone_number, sms_enabled, notif_enabled")
+      .in("id", parentIds);
+
+    // Send SMS to parents with sms_enabled
+    if (parentProfiles) {
+      for (const parent of parentProfiles) {
+        if (parent.sms_enabled && parent.phone_number) {
+          try {
+            const smsRes = await fetch(
+              `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/send-sms`,
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  to: parent.phone_number,
+                  message: `🚨 Emergency Alert! ${studentName} has triggered an SOS at ${location_name}. Location: https://www.google.com/maps?q=${lat},${lng}`,
+                }),
+              },
+            );
+            console.log(
+              "[Emergency] SMS sent to:",
+              parent.phone_number,
+              "Result:",
+              smsRes.status,
+            );
+          } catch (err) {
+            console.error("[Emergency] SMS send error:", err);
+          }
+        }
+      }
+    }
+
+    // Get push tokens for parents with notif_enabled
+    const notifEnabledParentIds =
+      parentProfiles
+        ?.filter((p) => p.notif_enabled !== false)
+        .map((p) => p.id) || parentIds;
     const { data: pushTokens, error: pushTokensError } = await adminClient
       .from("push_tokens")
       .select("token")
-      .in("user_id", parentIds);
+      .in("user_id", notifEnabledParentIds);
 
     console.log(
       "[Emergency] Push tokens found:",

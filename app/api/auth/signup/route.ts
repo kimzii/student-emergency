@@ -6,9 +6,9 @@ const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 export async function POST(req: NextRequest) {
   const supabase = createClient(supabaseUrl, supabaseKey);
-  const { email, password, fullName, role } = await req.json();
+  const { email, password, fullName, role, phoneNumber } = await req.json();
 
-  if (!email || !password || !fullName || !role) {
+  if (!email || !password || !fullName || !role || !phoneNumber) {
     return NextResponse.json(
       { error: "All fields are required." },
       { status: 400 },
@@ -36,6 +36,7 @@ export async function POST(req: NextRequest) {
       id: data.user.id,
       full_name: fullName,
       role,
+      phone_number: phoneNumber,
     });
 
     if (profileError) {

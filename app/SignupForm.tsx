@@ -13,6 +13,7 @@ export default function SignupForm() {
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("");
   const [fullName, setFullName] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -30,7 +31,13 @@ export default function SignupForm() {
     const res = await fetch("/api/auth/signup", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password, fullName, role }),
+      body: JSON.stringify({
+        email,
+        password,
+        fullName,
+        role,
+        phoneNumber: `+${phoneNumber.replace(/^\+/, "")}`,
+      }),
     });
     const result = await res.json();
 
@@ -89,6 +96,20 @@ export default function SignupForm() {
               onChange={(e) => setFullName(e.target.value)}
               required
             />
+            <label className="text-sm font-medium">Phone Number</label>
+            <div className="flex items-center gap-1">
+              <span className="text-gray-500 text-lg select-none">+</span>
+              <Input
+                type="tel"
+                placeholder="639123456789"
+                value={phoneNumber}
+                onChange={(e) =>
+                  setPhoneNumber(e.target.value.replace(/^\+/, ""))
+                }
+                required
+                className="flex-1"
+              />
+            </div>
             <label className="text-sm font-medium">Email</label>
             <Input
               type="email"

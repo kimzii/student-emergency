@@ -40,15 +40,36 @@ export default function ParentDashboard() {
   // Dashboard-wide SMS notification toggle
   const [smsEnabled, setSmsEnabled] = useState(true);
   const [notifEnabled, setNotifEnabled] = useState(true);
+
+  // Save preferences to Supabase
+  async function savePreferences(sms: boolean, notif: boolean) {
+    const { data: userData } = await supabase.auth.getUser();
+    if (userData?.user) {
+      await supabase
+        .from("profiles")
+        .update({ sms_enabled: sms, notif_enabled: notif })
+        .eq("id", userData.user.id);
+    }
+  }
+
   function handleToggleSms() {
     setSmsEnabled((prev) => {
       const next = !prev;
-      if (next) setNotifEnabled(true);
+      if (next) {
+        setNotifEnabled(true);
+        savePreferences(next, true);
+      } else {
+        savePreferences(next, notifEnabled);
+      }
       return next;
     });
   }
   function handleToggleNotif() {
-    setNotifEnabled((prev) => !prev);
+    setNotifEnabled((prev) => {
+      const next = !prev;
+      savePreferences(smsEnabled, next);
+      return next;
+    });
   }
 
   const [user, setUser] = useState<User | null>(null);
@@ -142,6 +163,16 @@ export default function ParentDashboard() {
       }
       setUser(data.user);
       await fetchLinkedStudents(data.user.id);
+      // Load preferences from profiles
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("sms_enabled, notif_enabled")
+        .eq("id", data.user.id)
+        .single();
+      if (profile) {
+        setSmsEnabled(profile.sms_enabled ?? true);
+        setNotifEnabled(profile.notif_enabled ?? true);
+      }
       setLoading(false);
     }
     fetchUser();
