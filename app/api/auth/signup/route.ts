@@ -6,7 +6,9 @@ const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 export async function POST(req: NextRequest) {
   const supabase = createClient(supabaseUrl, supabaseKey);
-  const { email, password, fullName, role, phoneNumber } = await req.json();
+  const { email, password, fullName, role, phoneNumber: rawPhone } = await req.json();
+  // Clean phone number: strip spaces and dashes to ensure E.164 format
+  const phoneNumber = rawPhone ? rawPhone.replace(/\s+|-/g, "") : "";
 
   if (!email || !password || !fullName || !role || !phoneNumber) {
     return NextResponse.json(

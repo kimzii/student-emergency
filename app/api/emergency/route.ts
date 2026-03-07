@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import webpush from "web-push";
+import twilio from "twilio";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -139,33 +140,48 @@ export async function POST(req: NextRequest) {
       profilesError,
     );
 
-    // Send SMS to parents — send if sms_enabled is true OR null (null = not set = default on)
-    if (parentProfiles) {
+    // Send SMS directly via Twilio (not via HTTP call to avoid localhost issues)
+    const twilioSid = process.env.TWILIO_ACCOUNT_SID;
+    const twilioToken = process.env.TWILIO_AUTH_TOKEN;
+    const twilioFrom = process.env.TWILIO_PHONE_NUMBER;
+
+    console.log(
+      "[Emergency] Twilio configured:",
+      !!twilioSid,
+      !!twilioToken,
+      !!twilioFrom,
+    );
+
+    if (parentProfiles && twilioSid && twilioToken && twilioFrom) {
+      const twilioClient = twilio(twilioSid, twilioToken);
       for (const parent of parentProfiles) {
+        console.log(
+          "[Emergency] Parent phone_number:",
+          parent.phone_number,
+          "sms_enabled:",
+          parent.sms_enabled,
+        );
         if (parent.sms_enabled !== false && parent.phone_number) {
           try {
-            const smsRes = await fetch(
-              `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/send-sms`,
-              {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  to: parent.phone_number,
-                  message: `🚨 Emergency Alert! ${studentName} has triggered an SOS at ${location_name}. Location: https://www.google.com/maps?q=${lat},${lng}`,
-                }),
-              },
-            );
-            console.log(
-              "[Emergency] SMS sent to:",
-              parent.phone_number,
-              "Result:",
-              smsRes.status,
-            );
-          } catch (err) {
-            console.error("[Emergency] SMS send error:", err);
+            // Strip spaces/dashes to ensure E.164 format for Twilio
+            const cleanPhone = parent.phone_number.replace(/\s+|-/g, "");
+            const msg = await twilioClient.messages.create({
+              body: `🚨 Emergency Alert! ${studentName} has triggered an SOS at ${location_name}. Location: https://www.google.com/maps?q=${lat},${lng}`,
+              from: twilioFrom,
+              to: cleanPhone,
+            });
+            console.log("[Emergency] SMS sent successfully. SID:", msg.sid);
+          } catch (err: any) {
+            console.error("[Emergency] Twilio SMS error:", err.message || err);
           }
+        } else {
+          console.log("[Emergency] Skipping SMS - no phone or sms disabled");
         }
       }
+    } else {
+      console.log(
+        "[Emergency] SMS skipped - Twilio not configured or no parent profiles",
+      );
     }
 
     // ALWAYS get push tokens for ALL linked parents (don't filter by preferences)
