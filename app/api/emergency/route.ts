@@ -171,8 +171,11 @@ export async function POST(req: NextRequest) {
               to: cleanPhone,
             });
             console.log("[Emergency] SMS sent successfully. SID:", msg.sid);
-          } catch (err: any) {
-            console.error("[Emergency] Twilio SMS error:", err.message || err);
+          } catch (err: unknown) {
+            console.error(
+              "[Emergency] Twilio SMS error:",
+              err instanceof Error ? err.message : String(err),
+            );
           }
         } else {
           console.log("[Emergency] Skipping SMS - no phone or sms disabled");
@@ -205,7 +208,6 @@ export async function POST(req: NextRequest) {
       vapidPrivateKey
     ) {
       // Send push notifications to all parent devices
-      const googleMapsUrl = `https://www.google.com/maps?q=${lat},${lng}`;
       const notificationPayload = JSON.stringify({
         title: "🚨 Emergency Alert!",
         body: `${studentName} has triggered an SOS! Tap to see their location.`,
