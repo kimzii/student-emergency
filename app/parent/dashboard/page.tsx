@@ -38,9 +38,17 @@ import { Switch } from "../../../components/ui/switch";
 
 export default function ParentDashboard() {
   // Dashboard-wide SMS notification toggle
-  const [smsEnabled, setSmsEnabled] = useState(false);
+  const [smsEnabled, setSmsEnabled] = useState(true);
+  const [notifEnabled, setNotifEnabled] = useState(true);
   function handleToggleSms() {
-    setSmsEnabled((prev) => !prev);
+    setSmsEnabled((prev) => {
+      const next = !prev;
+      if (next) setNotifEnabled(true);
+      return next;
+    });
+  }
+  function handleToggleNotif() {
+    setNotifEnabled((prev) => !prev);
   }
 
   const [user, setUser] = useState<User | null>(null);
@@ -233,7 +241,19 @@ export default function ParentDashboard() {
           </h1>
           <div className="mb-4 w-full flex flex-col gap-2 items-center">
             <div className="flex items-center gap-4 w-full justify-center">
-              <PushNotificationSubscriber />
+              <div className="flex items-center gap-2">
+                <Switch
+                  checked={notifEnabled}
+                  onChange={handleToggleNotif}
+                  id="notif-toggle-dashboard"
+                />
+                <label
+                  htmlFor="notif-toggle-dashboard"
+                  className="text-sm text-gray-700 select-none"
+                >
+                  Enable Notification
+                </label>
+              </div>
               <div className="flex items-center gap-2">
                 <Switch
                   checked={smsEnabled}
