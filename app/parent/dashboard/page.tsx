@@ -34,8 +34,15 @@ import { User } from "@supabase/supabase-js";
 import { Scanner } from "@yudiel/react-qr-scanner";
 import PushNotificationSubscriber from "../../components/PushNotificationSubscriber";
 import { MapPin, CheckCircle, Siren } from "lucide-react";
+import { Switch } from "../../../components/ui/switch";
 
 export default function ParentDashboard() {
+  // Dashboard-wide SMS notification toggle
+  const [smsEnabled, setSmsEnabled] = useState(false);
+  function handleToggleSms() {
+    setSmsEnabled((prev) => !prev);
+  }
+
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [scanning, setScanning] = useState(false);
@@ -146,8 +153,6 @@ export default function ParentDashboard() {
     // The scanner returns an array of objects with rawValue
     if (!Array.isArray(result) || !result[0]?.rawValue) return;
     const studentId = (result[0].rawValue as string).trim();
-    console.log("Scanned student ID:", studentId);
-    console.log("Student ID length:", studentId.length);
     setScanning(false);
     setLinkStatus("Fetching student info...");
 
@@ -161,7 +166,6 @@ export default function ParentDashboard() {
         setScannedStudent(data);
         setLinkStatus(null);
       } else {
-        console.error("Error response:", data);
         setLinkStatus(data.error || "Failed to fetch student info.");
       }
     } catch {
@@ -227,8 +231,23 @@ export default function ParentDashboard() {
           <h1 className="text-2xl font-bold mb-4 text-center">
             Parent Dashboard
           </h1>
-          <div className="mb-4">
-            <PushNotificationSubscriber />
+          <div className="mb-4 w-full flex flex-col gap-2 items-center">
+            <div className="flex items-center gap-4 w-full justify-center">
+              <PushNotificationSubscriber />
+              <div className="flex items-center gap-2">
+                <Switch
+                  checked={smsEnabled}
+                  onChange={handleToggleSms}
+                  id="sms-toggle-dashboard"
+                />
+                <label
+                  htmlFor="sms-toggle-dashboard"
+                  className="text-sm text-gray-700 select-none"
+                >
+                  Enable SMS
+                </label>
+              </div>
+            </div>
           </div>
           <p className="text-gray-600 mb-4 text-center">
             Scan your child&apos;s QR code to link your accounts.
