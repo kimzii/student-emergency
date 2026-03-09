@@ -27,9 +27,9 @@ export async function GET() {
       }),
     });
 
-    const data = await res.json();
+    const rawText = await res.text();
     logs.push(`Response status: ${res.status}`);
-    logs.push(`Response: ${JSON.stringify(data)}`);
+    logs.push(`Response: ${rawText}`);
 
     if (res.ok) {
       return NextResponse.json({ success: true, logs });
@@ -37,7 +37,7 @@ export async function GET() {
       return NextResponse.json({
         success: false,
         logs,
-        error: JSON.stringify(data),
+        error: rawText,
       });
     }
   } catch (err: unknown) {

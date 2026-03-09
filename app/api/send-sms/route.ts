@@ -28,11 +28,17 @@ export async function POST(request: Request) {
       }),
     });
 
-    const data = await res.json();
+    const rawText = await res.text();
+    let data: unknown;
+    try {
+      data = JSON.parse(rawText);
+    } catch {
+      data = rawText;
+    }
 
     if (!res.ok) {
       return NextResponse.json(
-        { success: false, error: JSON.stringify(data) },
+        { success: false, error: rawText },
         { status: 500 },
       );
     }
